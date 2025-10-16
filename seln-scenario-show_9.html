@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SELN Scenario Show - Interactive Leadership Game</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/framer-motion@10/dist/framer-motion.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Abel&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; }
+        .font-abel { font-family: 'Abel', sans-serif; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'nasddds-blue': '#004F6E',
+                        'nasddds-mint': '#92D0AA',
+                        'nasddds-gold': '#D7A461',
+                        'nasddds-salmon': '#C76C61',
+                        'nasddds-gray': '#C8C8C7',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        const { motion, AnimatePresence } = Motion;
+
+        // ============================================================================
+        // DATA DECK
+        // ============================================================================
+
+        const DECK = {
+          level1: {
+            name: "Foundational",
+            scenarios: [
+              {
+                title: "Silent Counterpart",
+                c_tag: "Collaboration/Coordination",
+                text: "After months of silence from your new VR counterpart, the interagency workgroup has stalled and regions are waiting for direction. What is your first move to re-engage VR and restart cadence? Why?"
+              },
+              {
+                title: "Provider Doubt",
+                c_tag: "Conviction",
+                text: "A large provider publicly questions whether people with higher support needs should be in job development, citing risk and liability. What statement do you make in the room to set the standard? Why?"
+              },
+              {
+                title: "Front-Door Confusion",
+                c_tag: "Consistency",
+                text: "Families get conflicting instructions about whether to start with VR or DD; local offices are inconsistent. What single clarifying instruction do you issue now? Why?"
+              },
+              {
+                title: "Definition Drift",
+                c_tag: "Consistency",
+                text: "Regions report 'participation in integrated employment' using different definitions, making dashboards incomparable. What near-term step aligns definitions across regions? Why?"
+              },
+              {
+                title: "Disconnected Dashboards",
+                c_tag: "Communication",
+                text: "DD tracks 'enrolled in services' while VR tracks 'job placements'; leadership wants a single number. What primary metric do you propose as the public anchor? Why?"
+              },
+              {
+                title: "Guardian Gatekeeping",
+                c_tag: "Communication",
+                text: "Guardians decline employment for people who say they want to work; staff are unsure what to do. What must occur before honoring an employment refusal? Why?"
+              },
+              {
+                title: "Waiting-List Workaround",
+                c_tag: "Equity",
+                text: "Providers informally prioritize those 'closest to work-ready'; people with complex needs are sidelined. What near-term mechanism will protect access for complex needs? Why?"
+              },
+              {
+                title: "Onboarding Void",
+                c_tag: "Equip",
+                text: "New consultants get generic orientation but no practical training on benefits, discovery, or CE; turnover rises. What immediate training or threshold do you put in place? Why?"
+              }
+            ],
+            constraints: [
+              "You have no direct authority over the other agency.",
+              "Must use plain language accessible to families and self-advocates.",
+              "Regional staff have not been trained on this issue yet.",
+              "Limited to phone calls and one meeting; no formal policy change.",
+              "Your director is traveling; decisions must wait until next week.",
+              "Other agency uses different terminology and definitions.",
+              "Budget cycle locked; no new funding available this fiscal year.",
+              "Advocacy groups are watching; transparency is essential."
+            ]
+          },
+          level2: {
+            name: "Operational",
+            scenarios: [
+              {
+                title: "Budget Rumors",
+                c_tag: "Communication",
+                text: "Rumors of a cap on employment services cause providers to pause referrals. What same-day message do you issue to stop the pause? Why?"
+              },
+              {
+                title: "Case Closures Without Handoffs",
+                c_tag: "Collaboration/Coordination",
+                text: "A VR office is closing cases at day 60; waiver supports are not queued and people lose momentum. What immediate handoff rule do you put in place? Why?"
+              },
+              {
+                title: "14(c) Rapid Pivot",
+                c_tag: "Consistency",
+                text: "A facility plans a rapid move to community jobs without transport or coaching plans. What minimum readiness bar do you set before day-one starts? Why?"
+              },
+              {
+                title: "Rates vs. Acuity",
+                c_tag: "Creativity",
+                text: "High-performing agencies stop referrals, citing travel and intensive coaching not covered by rates. What stop-gap lever do you use to resume referrals now? Why?"
+              },
+              {
+                title: "Discovery Disappears",
+                c_tag: "Consistency",
+                text: "Regional managers shift hours from discovery to direct placement; job mismatches rise. What near-term guardrail do you set for discovery usage? Why?"
+              },
+              {
+                title: "Transportation Black Hole",
+                c_tag: "Creativity",
+                text: "Rural county has offers for five people but no transit or ride-share funding path. What short-term transport fix do you activate this week? Why?"
+              },
+              {
+                title: "Compliance Creep",
+                c_tag: "Consistency",
+                text: "An auditor requires monthly face-to-face documentation for all supports; caseloads double. What clarifying guidance do you release to curb over-reach? Why?"
+              },
+              {
+                title: "Waiver Waitlist Cliff",
+                c_tag: "Creativity",
+                text: "Youth exiting school face a two-year wait for the employment waiver; families question pursuing work. What immediate bridge option do you authorize for offers now? Why?"
+              }
+            ],
+            constraints: [
+              "Finance office has frozen all new expenditures pending audit.",
+              "Provider association requests written clarification by end of business tomorrow.",
+              "Three regions are interpreting the policy differently.",
+              "VR leadership is unavailable for two weeks; acting director hesitant to decide.",
+              "Families are copying state legislators on their emails.",
+              "No additional staff available; must work within existing capacity.",
+              "Current rate structure was negotiated two years ago; no flexibility until renewal.",
+              "Regional managers expect unified guidance by Friday's call."
+            ]
+          },
+          level3: {
+            name: "Systems & Culture",
+            scenarios: [
+              {
+                title: "Equity Finding",
+                c_tag: "Communication",
+                text: "Data show lower CIE entry for people with significant behavior plans; advocates request a public response. What immediate public step do you take on the disparity? Why?"
+              },
+              {
+                title: "Opt-Out Culture",
+                c_tag: "Conviction",
+                text: "A county tells teams to try day services first before any employment talk; 'that's how we've always done it.' What step makes employment the default conversation? Why?"
+              },
+              {
+                title: "K–12 Friction",
+                c_tag: "Collaboration/Coordination",
+                text: "A district resists inviting VR to IEPs due to privacy; referrals are late. What concrete mechanism brings VR in at the right time? Why?"
+              },
+              {
+                title: "Procurement Mismatch",
+                c_tag: "Consistency",
+                text: "An 'employment services' RFP lacks essential practice elements and outcomes. What step do you take to inject practice and outcomes now? Why?"
+              },
+              {
+                title: "Siloed Success Stories",
+                c_tag: "Consistency",
+                text: "VR touts closures; DD tracks support hours; no shared 'sustained employment' definition. What shared retention definition do you adopt immediately? Why?"
+              },
+              {
+                title: "Self-Direction Standoff",
+                c_tag: "Creativity",
+                text: "Families using self-direction want to hire job coaches; procurement rules require agencies. What permissible route do you create for self-hired coaches? Why?"
+              },
+              {
+                title: "Benefits Cliff Communication",
+                c_tag: "Communication",
+                text: "Three people refuse job offers fearing loss of benefits; staff cannot explain incentives. What benefits counseling step do you require pre-refusal? Why?"
+              },
+              {
+                title: "Performance Metrics Misalignment",
+                c_tag: "Consistency",
+                text: "Your dashboard rewards job starts; contracts reward retention; cycling increases. What immediate metric change will curb churn? Why?"
+              }
+            ],
+            constraints: [
+              "Both agencies cite conflicting federal guidance from different program offices.",
+              "No single person has decision authority; requires joint sign-off from two directors.",
+              "Cultural shift needed but no training budget or consultant funds available.",
+              "Attorney General's office must review before any public commitment.",
+              "Community of Practice meeting in 72 hours; members expect your position.",
+              "Procurement office will not reopen the comment period or extend timeline.",
+              "Public dashboard auto-publishes in 10 days; no mechanism to delay.",
+              "Legislative oversight committee has requested briefing on this exact issue."
+            ]
+          },
+          level4: {
+            name: "Complex/Public",
+            scenarios: [
+              {
+                title: "Legislative Clock",
+                c_tag: "Communication",
+                text: "A legislative committee requests current CIE rates, wait times, and a near-term plan by Friday; media may attend. What deliverable do you publish by Friday as the anchor? Why?"
+              },
+              {
+                title: "Conflicting Dashboards",
+                c_tag: "Communication",
+                text: "An advocacy dashboard's CIE rate diverges from the state's; reporters ask for an explanation. What reconciliation note do you issue publicly? Why?"
+              },
+              {
+                title: "Surge Placement",
+                c_tag: "Collaboration/Coordination",
+                text: "A work center will close in six months affecting 120 people; leadership wants weekly visibility without new staff. What weekly mechanism tracks progress and unblocks cases? Why?"
+              },
+              {
+                title: "MOU Freeze",
+                c_tag: "Collaboration/Coordination",
+                text: "VR pauses an MOU revision over supplanting concerns and will only consider limited pilots with guardrails. What agreement do you set up next to keep work moving? Why?"
+              },
+              {
+                title: "Settlement Agreement Deadline",
+                c_tag: "Conviction",
+                text: "A consent decree requires specific CIE benchmarks by year-end; current trajectory will miss. The monitor asks for a corrective plan. What immediate lever goes into your corrective plan? Why?"
+              },
+              {
+                title: "Rate Study Stalemate",
+                c_tag: "Creativity",
+                text: "A rate study supports increases for employment, but budget will approve only if paired with reductions to facility rates; both provider groups mobilize. What transition construct do you propose to break the stalemate? Why?"
+              },
+              {
+                title: "HCBS Compliance Scramble",
+                c_tag: "Consistency",
+                text: "CMS flags three employment practices as potentially non-compliant; legal review is pending; waiver renewal is in 90 days. What interim guidance do you issue before legal completes? Why?"
+              },
+              {
+                title: "Competitive Grant Collision",
+                c_tag: "Creativity",
+                text: "Two federal grant opportunities require lead sign-off on the same date and different interagency partnerships. What portfolio decision do you make on the two grants? Why?"
+              }
+            ],
+            constraints: [
+              "DOJ consent decree timeline is non-negotiable; court monitor reviews monthly.",
+              "Governor's office monitoring closely; weekly briefing memo required.",
+              "National media outlet filed FOIA request on all related communications.",
+              "Federal program officer expects detailed update on tomorrow's quarterly call.",
+              "Legislative session ends in 14 days; bill must pass now or wait a full year.",
+              "Two provider associations have publicly opposing positions and strong lobbying presence.",
+              "CMS waiver renewal is pending; any compliance question risks approval delay.",
+              "Court monitor has subpoena authority; all documents must be audit-ready."
+            ]
+          }
+        };
+
+        const STAKEHOLDERS = {
+          level1: [
+            "Regional VR counselor supervisor",
+            "Local DD case management supervisor",
+            "Provider employment specialist",
+            "Parent advocate from regional council",
+            "School transition coordinator",
+            "Community rehabilitation program director",
+            "Benefits counselor (part-time contract)",
+            "Self-advocate who recently started working"
+          ],
+          level2: [
+            "Budget analyst from finance office",
+            "Regional operations manager",
+            "Provider CEO (multi-county agency)",
+            "Transportation coordinator",
+            "Quality assurance director",
+            "Waiver services manager",
+            "Contract compliance officer",
+            "Provider association executive director"
+          ],
+          level3: [
+            "Medicaid policy director",
+            "Legal counsel (AG's office)",
+            "Procurement/contracting officer",
+            "Community of Practice facilitator",
+            "State VR policy chief",
+            "Legislative oversight committee analyst",
+            "Disability rights advocacy director",
+            "Education special ed director"
+          ],
+          level4: [
+            "Federal program officer (RSA/ACL)",
+            "Court-appointed monitor",
+            "Governor's senior policy advisor",
+            "Legislative committee chair",
+            "CMS regional administrator",
+            "State budget director",
+            "Investigative journalist",
+            "DOJ civil rights attorney"
+          ]
+        };
+
+        const TWISTS = {
+          level1: [
+            "Key contact goes on medical leave",
+            "Email misinterpretation spreads to three regions",
+            "Deadline for decision moved up to this Friday",
+            "Another county experiences the same issue",
+            "Provider asks to discuss in next week's standing meeting",
+            "Regional staff forward conflicting guidance to families",
+            "New employee misunderstands protocol and shares wrong info",
+            "Advocate requests to observe your next coordination call"
+          ],
+          level2: [
+            "Finance office announces hiring freeze",
+            "Unrelated audit uncovers documentation gap",
+            "Shared data system goes offline for a week",
+            "Two providers submit identical concern simultaneously",
+            "Regional manager on vacation; acting manager unfamiliar with issue",
+            "Annual rate negotiation cycle opens early",
+            "Provider association schedules emergency member call",
+            "Compliance officer requests immediate policy clarification"
+          ],
+          level3: [
+            "Federal agency issues conflicting guidance memo",
+            "Attorney General requests legal review before any action",
+            "Legislative staffer asks for background briefing",
+            "Community of Practice asks you to present findings",
+            "Advocacy coalition schedules press conference",
+            "Procurement timeline cannot be extended per state law",
+            "Sister agency announces competing initiative",
+            "Public comment period generates 50+ submissions"
+          ],
+          level4: [
+            "National media outlet requests interview",
+            "Court monitor schedules site visit next month",
+            "Legislative hearing scheduled with 48 hours notice",
+            "Federal program officer flags issue on quarterly call",
+            "Governor's office requests briefing memo by tomorrow",
+            "CMS sends formal request for corrective action plan",
+            "Advocacy groups file administrative complaint",
+            "Budget committee advances competing proposal"
+          ]
+        };
+
+        const REFLECTION_PROMPTS = [
+          {
+            title: "When I was new",
+            question: "How would I have approached this? What would I have prioritized? Who would I have called first?"
+          },
+          {
+            title: "How I lead now",
+            question: "What systems or relationships let me move differently? What can I leverage that I didn't have early on? What do I let go of or delegate?"
+          },
+          {
+            title: "Leading from the middle",
+            question: "Where is my influence vs. authority? Who needs to own what? How do I create alignment without control?"
+          }
+        ];
+
+        // ============================================================================
+        // HELPERS
+        // ============================================================================
+
+        function pickRandom(arr, usedSet = new Set()) {
+          const available = arr.filter((_, i) => !usedSet.has(i));
+          if (available.length === 0) return arr[Math.floor(Math.random() * arr.length)];
+          return available[Math.floor(Math.random() * available.length)];
+        }
+
+        function pickRandomIndex(arr, usedSet = new Set()) {
+          const availableIndices = arr
+            .map((_, i) => i)
+            .filter(i => !usedSet.has(i));
+          
+          if (availableIndices.length === 0) {
+            return Math.floor(Math.random() * arr.length);
+          }
+          
+          return availableIndices[Math.floor(Math.random() * availableIndices.length)];
+        }
+
+        function pad(n) {
+          return String(n).padStart(2, '0');
+        }
+
+        // ============================================================================
+        // AUDIO CHIME
+        // ============================================================================
+
+        function playChime() {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.frequency.value = 800;
+          osc.type = 'sine';
+          
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+          
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.5);
+        }
+
+        // ============================================================================
+        // COUNTDOWN HOOK
+        // ============================================================================
+
+        function useCountdown(initialSeconds) {
+          const [seconds, setSeconds] = useState(initialSeconds);
+          const [running, setRunning] = useState(false);
+          const intervalRef = useRef(null);
+
+          useEffect(() => {
+            if (running && seconds > 0) {
+              intervalRef.current = setInterval(() => {
+                setSeconds(s => {
+                  if (s <= 1) {
+                    setRunning(false);
+                    playChime();
+                    return 0;
+                  }
+                  return s - 1;
+                });
+              }, 1000);
+            } else {
+              if (intervalRef.current) clearInterval(intervalRef.current);
+            }
+            
+            return () => {
+              if (intervalRef.current) clearInterval(intervalRef.current);
+            };
+          }, [running, seconds]);
+
+          const toggle = () => setRunning(r => !r);
+          const reset = (newSeconds) => {
+            setRunning(false);
+            setSeconds(newSeconds);
+          };
+
+          return { seconds, setSeconds, running, toggle, reset };
+        }
+
+        // ============================================================================
+        // MAIN COMPONENT
+        // ============================================================================
+
+        function ScenarioShow() {
+          const [stageMode, setStageMode] = useState('deal'); // 'deal' | 'reveal'
+          const [choices, setChoices] = useState([]);
+          const [selectedScenario, setSelectedScenario] = useState(null);
+          const [selectedConstraint, setSelectedConstraint] = useState(null);
+          const [stakeholder, setStakeholder] = useState(null);
+          const [twist, setTwist] = useState(null);
+          const [hostPanelOpen, setHostPanelOpen] = useState(false);
+          
+          const [usedScenarios, setUsedScenarios] = useState({
+            level1: new Set(),
+            level2: new Set(),
+            level3: new Set(),
+            level4: new Set()
+          });
+          
+          const [usedConstraints, setUsedConstraints] = useState({
+            level1: new Set(),
+            level2: new Set(),
+            level3: new Set(),
+            level4: new Set()
+          });
+
+          const timer = useCountdown(600);
+
+          const dealFourTitles = () => {
+            const levels = ['level1', 'level2', 'level3', 'level4'];
+            const newChoices = levels.map(level => {
+              const scenarios = DECK[level].scenarios;
+              const idx = pickRandomIndex(scenarios, usedScenarios[level]);
+              
+              setUsedScenarios(prev => ({
+                ...prev,
+                [level]: new Set([...prev[level], idx])
+              }));
+              
+              return {
+                level,
+                levelName: DECK[level].name,
+                scenario: scenarios[idx],
+                scenarioIndex: idx
+              };
+            });
+            
+            setChoices(newChoices);
+            setStageMode('deal');
+            setSelectedScenario(null);
+            setSelectedConstraint(null);
+            setStakeholder(null);
+            setTwist(null);
+          };
+
+          const selectScenario = (choice) => {
+            playChime();
+            
+            setSelectedScenario(choice);
+            setSelectedConstraint(null);
+            setStageMode('reveal');
+          };
+
+          const drawConstraint = () => {
+            const constraints = DECK[selectedScenario.level].constraints;
+            const constraintIdx = pickRandomIndex(constraints, usedConstraints[selectedScenario.level]);
+            
+            setUsedConstraints(prev => ({
+              ...prev,
+              [selectedScenario.level]: new Set([...prev[selectedScenario.level], constraintIdx])
+            }));
+            
+            setSelectedConstraint(constraints[constraintIdx]);
+            playChime();
+          };
+
+          const drawStakeholder = () => {
+            const levelStakeholders = STAKEHOLDERS[selectedScenario.level];
+            setStakeholder(pickRandom(levelStakeholders));
+            playChime();
+          };
+
+          const drawTwist = () => {
+            const levelTwists = TWISTS[selectedScenario.level];
+            setTwist(pickRandom(levelTwists));
+            playChime();
+          };
+
+          useEffect(() => {
+            dealFourTitles();
+          }, []);
+
+          const formatTime = () => {
+            const mins = Math.floor(timer.seconds / 60);
+            const secs = timer.seconds % 60;
+            return `${pad(mins)}:${pad(secs)}`;
+          };
+
+          return (
+            <div className="relative w-screen h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-nasddds-blue to-slate-800">
+              {/* Radial gradient overlay for stage lighting effect */}
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-nasddds-mint/20 via-transparent to-transparent pointer-events-none" />
+              
+              <div className="relative z-10 flex flex-col h-full p-12">
+                {/* Header */}
+                <header className="text-center mb-12">
+                  <h1 className="font-abel text-7xl font-black text-white tracking-tight">
+                    The Scenario Show
+                  </h1>
+                </header>
+
+                {/* Main Stage */}
+                <main className="flex-1 flex items-center justify-center">
+                  <AnimatePresence mode="wait">
+                    {stageMode === 'deal' && (
+                      <motion.div
+                        key="deal"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="w-full max-w-7xl"
+                      >
+                        <div className="grid grid-cols-2 gap-8">
+                          {choices.map((choice, idx) => (
+                            <motion.button
+                              key={`${choice.level}-${choice.scenarioIndex}`}
+                              onClick={() => selectScenario(choice)}
+                              className="aspect-square bg-gradient-to-br from-slate-800 to-slate-900 rounded-[2rem] p-10 border-4 border-nasddds-blue/40 hover:border-nasddds-mint/80 transition-all duration-300 cursor-pointer group relative overflow-hidden"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.98 }}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: idx * 0.1 }}
+                            >
+                              {/* Glow effect */}
+                              <div className="absolute inset-0 bg-gradient-to-br from-nasddds-blue/0 to-nasddds-blue/0 group-hover:from-nasddds-mint/20 group-hover:to-nasddds-blue/20 transition-all duration-500 rounded-[2rem]" />
+                              
+                              <div className="relative z-10 flex flex-col items-center justify-center h-full text-center">
+                                <div className="text-nasddds-mint text-lg font-semibold mb-4 uppercase tracking-wider">
+                                  Level {idx + 1} — {choice.levelName}
+                                </div>
+                                <div className="text-white font-abel text-4xl font-bold leading-tight">
+                                  {choice.scenario.title}
+                                </div>
+                              </div>
+                            </motion.button>
+                          ))}
+                        </div>
+                        
+                        <div className="text-center mt-10">
+                          <button
+                            onClick={dealFourTitles}
+                            className="font-abel px-10 py-4 bg-gradient-to-r from-nasddds-blue to-nasddds-mint hover:from-nasddds-mint hover:to-nasddds-blue text-white text-2xl font-bold rounded-full shadow-2xl transition-all duration-300 hover:scale-105"
+                          >
+                            ↻ Redeal Choices
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {stageMode === 'reveal' && selectedScenario && (
+                      <motion.div
+                        key="reveal"
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -30 }}
+                        className="w-full max-w-6xl"
+                      >
+                        {/* Main Scenario Card */}
+                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-[2rem] p-12 border-4 border-nasddds-mint/40 shadow-2xl mb-8">
+                          <div className="flex justify-between items-start mb-6">
+                            <div className="flex-1">
+                              <div className="text-nasddds-mint text-xl font-semibold mb-2 uppercase tracking-wider">
+                                Level {['level1', 'level2', 'level3', 'level4'].indexOf(selectedScenario.level) + 1} — {selectedScenario.levelName}
+                              </div>
+                              <div className="flex items-center gap-4 mb-4">
+                                <h2 className="font-abel text-6xl font-black text-white">
+                                  {selectedScenario.scenario.title}
+                                </h2>
+                                <span className="px-4 py-2 bg-nasddds-mint/20 border border-nasddds-mint/40 rounded-lg text-nasddds-mint text-sm font-semibold">
+                                  {selectedScenario.scenario.c_tag}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            {!hostPanelOpen && (
+                              <div className="text-6xl font-mono font-bold text-nasddds-mint bg-slate-900/50 px-8 py-4 rounded-2xl">
+                                {formatTime()}
+                              </div>
+                            )}
+                          </div>
+                          
+                          <p className="text-white text-3xl leading-relaxed mb-8 font-light">
+                            {selectedScenario.scenario.text}
+                          </p>
+
+                          {/* Reflection Prompts */}
+                          <div className="border-t-2 border-nasddds-mint/30 pt-8 mt-8">
+                            <h3 className="font-abel text-3xl font-bold text-nasddds-mint mb-6">💭 Reflection Prompts</h3>
+                            <div className="space-y-4">
+                              {REFLECTION_PROMPTS.map((prompt, idx) => (
+                                <motion.div
+                                  key={idx}
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: 0.3 + idx * 0.1 }}
+                                  className="bg-slate-900/50 rounded-xl p-6 border-2 border-nasddds-blue/30"
+                                >
+                                  <div className="text-nasddds-mint text-2xl font-bold mb-2">
+                                    {prompt.title}:
+                                  </div>
+                                  <div className="text-slate-300 text-xl leading-relaxed">
+                                    {prompt.question}
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Context Cards */}
+                        <div className="grid grid-cols-3 gap-6">
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="bg-gradient-to-br from-nasddds-gold/30 to-nasddds-gold/20 rounded-2xl p-6 border-2 border-nasddds-gold/50"
+                          >
+                            <div className="text-nasddds-gold text-sm font-bold mb-2 uppercase tracking-wider">
+                              Constraint
+                            </div>
+                            <div className="text-white text-xl font-semibold">
+                              {selectedConstraint || '—'}
+                            </div>
+                          </motion.div>
+
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="bg-gradient-to-br from-nasddds-blue/30 to-nasddds-blue/20 rounded-2xl p-6 border-2 border-nasddds-blue/50"
+                          >
+                            <div className="text-nasddds-mint text-sm font-bold mb-2 uppercase tracking-wider">
+                              Stakeholder
+                            </div>
+                            <div className="text-white text-xl font-semibold">
+                              {stakeholder || '—'}
+                            </div>
+                          </motion.div>
+
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                            className="bg-gradient-to-br from-nasddds-salmon/30 to-nasddds-salmon/20 rounded-2xl p-6 border-2 border-nasddds-salmon/50"
+                          >
+                            <div className="text-nasddds-salmon text-sm font-bold mb-2 uppercase tracking-wider">
+                              Twist
+                            </div>
+                            <div className="text-white text-xl font-semibold">
+                              {twist || '—'}
+                            </div>
+                          </motion.div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </main>
+
+                {/* Host Panel Toggle */}
+                <button
+                  onClick={() => setHostPanelOpen(!hostPanelOpen)}
+                  className="fixed bottom-8 right-8 w-16 h-16 bg-nasddds-blue hover:bg-nasddds-mint rounded-full shadow-2xl flex items-center justify-center text-white text-2xl font-bold transition-all duration-300 hover:scale-110 z-50"
+                >
+                  {hostPanelOpen ? '×' : '⚙'}
+                </button>
+
+                {/* Host Panel */}
+                <AnimatePresence>
+                  {hostPanelOpen && (
+                    <motion.div
+                      initial={{ x: '100%' }}
+                      animate={{ x: 0 }}
+                      exit={{ x: '100%' }}
+                      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                      className="fixed top-0 right-0 h-full w-96 bg-slate-900 border-l-4 border-nasddds-mint shadow-2xl p-8 overflow-y-auto z-40"
+                    >
+                      <h2 className="font-abel text-3xl font-bold text-white mb-6">Host Panel</h2>
+
+                      {/* Round Controls */}
+                      <div className="mb-8">
+                        <h3 className="text-xl font-semibold text-nasddds-mint mb-4">Round Controls</h3>
+                        <button
+                          onClick={dealFourTitles}
+                          className="font-abel w-full px-6 py-4 bg-gradient-to-r from-nasddds-blue to-nasddds-mint hover:from-nasddds-mint hover:to-nasddds-blue text-white text-lg font-bold rounded-xl transition-all duration-300 mb-3"
+                        >
+                          New Round — Deal 4 Titles
+                        </button>
+                      </div>
+
+                      {/* Timer Controls */}
+                      <div className="mb-8">
+                        <h3 className="text-xl font-semibold text-nasddds-mint mb-4">Timer</h3>
+                        <div className="text-6xl font-mono font-bold text-white text-center mb-4 bg-slate-800 rounded-xl py-4">
+                          {formatTime()}
+                        </div>
+                        
+                        <button
+                          onClick={timer.toggle}
+                          className="font-abel w-full px-6 py-3 bg-green-600 hover:bg-green-500 text-white text-lg font-bold rounded-xl transition-all duration-300 mb-3"
+                        >
+                          {timer.running ? 'Pause' : 'Start'}
+                        </button>
+
+                        <div className="grid grid-cols-3 gap-2 mb-3">
+                          {[2, 8, 10].map(mins => (
+                            <button
+                              key={mins}
+                              onClick={() => timer.reset(mins * 60)}
+                              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all"
+                            >
+                              {mins}m
+                            </button>
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[12, 15].map(mins => (
+                            <button
+                              key={mins}
+                              onClick={() => timer.reset(mins * 60)}
+                              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all"
+                            >
+                              {mins}m
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Wildcards */}
+                      {stageMode === 'reveal' && (
+                        <div>
+                          <h3 className="text-xl font-semibold text-nasddds-mint mb-4">Wildcards</h3>
+                          <button
+                            onClick={drawConstraint}
+                            className="font-abel w-full px-6 py-3 bg-nasddds-gold hover:bg-yellow-600 text-white text-lg font-bold rounded-xl transition-all duration-300 mb-3"
+                          >
+                            Draw Constraint
+                          </button>
+                          <button
+                            onClick={drawStakeholder}
+                            className="font-abel w-full px-6 py-3 bg-nasddds-blue hover:bg-nasddds-mint text-white text-lg font-bold rounded-xl transition-all duration-300 mb-3"
+                          >
+                            Draw Stakeholder
+                          </button>
+                          <button
+                            onClick={drawTwist}
+                            className="font-abel w-full px-6 py-3 bg-nasddds-salmon hover:bg-nasddds-gold text-white text-lg font-bold rounded-xl transition-all duration-300"
+                          >
+                            Draw Twist
+                          </button>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          );
+        }
+
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ScenarioShow />);
+    </script>
+</body>
+</html>
